@@ -190,7 +190,7 @@ PROD_TOKEN = "311427299:AAH383yX1vqVsGR_59qJp3bdkTFbrr-UN38"
 DEV_TOKEN = "409284378:AAGOvaA_SRaKrbb-gL6z-yWnK3260MTEGyc"
 TOKEN = DEV_TOKEN  # by default we have dev token
 
-if len(sys.argv) > 0 and sys.argv[0] == "prod":
+if len(sys.argv) > 0 and sys.argv[1] == "prod":
     TOKEN = PROD_TOKEN
     print("Bot will start in production mode")
 else:
