@@ -5,6 +5,7 @@ from telepot.loop import MessageLoop
 from telepot.delegate import (
     per_chat_id, create_open, pave_event_space)
 import storage
+import sys
 
 
 vote_storage = storage.VoteStorage()
@@ -59,7 +60,6 @@ class VoteCounter(telepot.helper.ChatHandler):
                     self.add_user(p)
             else:
                 self.add_user(msg["from"])
-            self.send_next_date()
             return
 
         if command == "/remove":
@@ -69,18 +69,17 @@ class VoteCounter(telepot.helper.ChatHandler):
                     self.remove_user(p)
             else:
                 self.remove_user(msg["from"])
-            self.send_next_date()
             return
 
         if command == "/who":
-            all_p = self.storage.all()
-            if all_p is None or len(all_p) == 0:
+            all_p = self.get_players()
+            if len(all_p) == 0:
                 self.sender.sendMessage("Nobody on {}".format(self.get_fmt_next_date()))
                 return
-            msg = ""
+            msg = "There are {0}: \r\n".format(self.format_players_count(len(all_p)))
             for k in all_p:
                 p = all_p[k]
-                msg += "{0} will play \r\n".format(self.name(p))
+                msg += "{0}\r\n".format(self.name(p))
             self.sender.sendMessage(msg)
             return
 
@@ -92,17 +91,36 @@ class VoteCounter(telepot.helper.ChatHandler):
         date = self.storage.get_next_event()
         return self.fmt_next_date(date)
 
+    def get_players_count(self):
+        return len(self.get_players())
+
+    def format_players_count(self, cnt=None):
+        cnt = cnt or self.get_players_count()
+        if cnt == 0:
+            return "no players"
+        if cnt == 1:
+            return "1 player"
+        return "{0} players".format(str(cnt))
+
+    def get_players(self):
+        all_p = self.storage.all()
+        if all_p is None:
+            return []
+        return all_p
+
     @staticmethod
     def fmt_next_date(date):
         return date.strftime("%A %d. %B %Y")
 
     def add_user(self, user):
         self.storage.add(user)
-        self.sender.sendMessage("{0} will play".format(self.name(user)))
+        self.sender.sendMessage("{0} will play, there are {1} already"
+                                .format(self.name(user), self.format_players_count()))
 
     def remove_user(self, user):
         self.storage.remove(user)
-        self.sender.sendMessage("{0} will not play".format(self.name(user)))
+        self.sender.sendMessage("{0} will not play, there are {1} now"
+                                .format(self.name(user), self.format_players_count()))
 
     @staticmethod
     def name(user):
@@ -168,11 +186,19 @@ class VoteCounter(telepot.helper.ChatHandler):
         cmd = cmd_text.split('@')[0]
         return cmd
 
-TOKEN = "311427299:AAH383yX1vqVsGR_59qJp3bdkTFbrr-UN38"
+PROD_TOKEN = "311427299:AAH383yX1vqVsGR_59qJp3bdkTFbrr-UN38"
+DEV_TOKEN = "409284378:AAGOvaA_SRaKrbb-gL6z-yWnK3260MTEGyc"
+TOKEN = DEV_TOKEN  # by default we have dev token
+
+if len(sys.argv) > 0 and sys.argv[0] == "prod":
+    TOKEN = PROD_TOKEN
+    print("Bot will start in production mode")
+else:
+    print("Bot will start in development mode")
 
 bot = telepot.DelegatorBot(TOKEN, [
     pave_event_space()(
-            per_chat_id(types=['group', 'supergroup']), create_open, VoteCounter, timeout=10),
+            per_chat_id(types=['private', 'channel', 'group', 'supergroup']), create_open, VoteCounter, timeout=10),
 ])
 MessageLoop(bot).run_as_thread()
 print('Listening ...')
