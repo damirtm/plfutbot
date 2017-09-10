@@ -80,9 +80,7 @@ class VoteCounter(telepot.helper.ChatHandler):
             msg = ""
             for k in all_p:
                 p = all_p[k]
-                first_name = p.get('first_name', "")
-                second_name = p.get('last_name', "")
-                msg += "{0} {1} will play \r\n".format(first_name, second_name)
+                msg += "{0} will play \r\n".format(self.name(p))
             self.sender.sendMessage(msg)
             return
 
@@ -100,11 +98,17 @@ class VoteCounter(telepot.helper.ChatHandler):
 
     def add_user(self, user):
         self.storage.add(user)
-        self.sender.sendMessage("{first_name} {last_name} will play".format(**user))
+        self.sender.sendMessage("{0} will play".format(self.name(user)))
 
     def remove_user(self, user):
         self.storage.remove(user)
-        self.sender.sendMessage("{first_name} {last_name} will not play".format(**user))
+        self.sender.sendMessage("{0} will not play".format(self.name(user)))
+
+    @staticmethod
+    def name(user):
+        first_name = user.get('first_name', "")
+        second_name = user.get('last_name', "")
+        return "{0} {1}".format(first_name, second_name)
 
     @staticmethod
     def next_date(day):
@@ -160,7 +164,9 @@ class VoteCounter(telepot.helper.ChatHandler):
         cmd_start = def_command['offset']
         cmd_length = def_command['length']
         txt = msg["text"]
-        return txt[cmd_start:cmd_start + cmd_length]
+        cmd_text = txt[cmd_start:cmd_start + cmd_length]
+        cmd = cmd_text.split('@')[0]
+        return cmd
 
 TOKEN = "311427299:AAH383yX1vqVsGR_59qJp3bdkTFbrr-UN38"
 
