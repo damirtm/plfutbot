@@ -27,6 +27,12 @@ class VoteStorage:
         next_event = self._next_event()
         self.db.child("players").child(next_event).child(person["id"]).set(person)
 
+    def add_shame(self, person):
+        self.db.child("shame").child(person["id"]).set(person)
+
+    def get_shame(self):
+        return self.db.child("shame").get().val()
+
     def all(self):
         next_event = self._next_event()
         return self.db.child("players").child(next_event).get().val()

@@ -62,6 +62,15 @@ class VoteCounter(telepot.helper.ChatHandler):
                 self.add_user(msg["from"])
             return
 
+        if command == "/shame":
+            persons = self.get_persons(msg)
+            if persons is not None and len(persons) > 0:
+                for p in persons:
+                    self.shame_user(p)
+            else:
+                self.shame_user(msg["from"])
+            return
+
         if command == "/remove":
             persons = self.get_persons(msg)
             if persons is not None and len(persons) > 0:
@@ -77,6 +86,18 @@ class VoteCounter(telepot.helper.ChatHandler):
                 self.sender.sendMessage("Nobody on {}".format(self.get_fmt_next_date()))
                 return
             msg = "There are {0}: \r\n".format(self.format_players_count(len(all_p)))
+            for k in all_p:
+                p = all_p[k]
+                msg += "{0}\r\n".format(self.name(p))
+            self.sender.sendMessage(msg)
+            return
+
+        if command == "/wallofshame":
+            all_p = self.get_shame()
+            if len(all_p) == 0:
+                self.sender.sendMessage("Nobody to shame".format(self.get_fmt_next_date()))
+                return
+            msg = "Wall of shame: \r\n"
             for k in all_p:
                 p = all_p[k]
                 msg += "{0}\r\n".format(self.name(p))
@@ -111,6 +132,11 @@ class VoteCounter(telepot.helper.ChatHandler):
     @staticmethod
     def fmt_next_date(date):
         return date.strftime("%A %d. %B %Y")
+
+    def shame_user(self, user):
+        self.storage.add_shame(user)
+        self.sender.sendMessage("Shame to {0}"
+                                .format(self.name(user)))
 
     def add_user(self, user):
         self.storage.add(user)
