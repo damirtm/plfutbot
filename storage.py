@@ -30,6 +30,9 @@ class VoteStorage:
     def add_shame(self, person):
         self.db.child("shame").child(person["id"]).set(person)
 
+    def remove_shame(self, person):
+        self.db.child("shame").child(person["id"]).remove()
+
     def get_shame(self):
         return self.db.child("shame").get().val()
 

@@ -71,6 +71,15 @@ class VoteCounter(telepot.helper.ChatHandler):
                 self.shame_user(msg["from"])
             return
 
+        if command == "/dontshame":
+            persons = self.get_persons(msg)
+            if persons is not None and len(persons) > 0:
+                for p in persons:
+                    self.remove_shame(p)
+            else:
+                self.remove_shame(msg["from"])
+            return
+
         if command == "/remove":
             persons = self.get_persons(msg)
             if persons is not None and len(persons) > 0:
@@ -82,7 +91,7 @@ class VoteCounter(telepot.helper.ChatHandler):
 
         if command == "/who":
             all_p = self.get_players()
-            if len(all_p) == 0:
+            if all_p is None or len(all_p) == 0:
                 self.sender.sendMessage("Nobody on {}".format(self.get_fmt_next_date()))
                 return
             msg = "There are {0}: \r\n".format(self.format_players_count(len(all_p)))
@@ -94,7 +103,7 @@ class VoteCounter(telepot.helper.ChatHandler):
 
         if command == "/wallofshame":
             all_p = self.storage.get_shame()
-            if len(all_p) == 0:
+            if all_p is None or len(all_p) == 0:
                 self.sender.sendMessage("Nobody to shame".format(self.get_fmt_next_date()))
                 return
             msg = "Wall of shame: \r\n"
@@ -142,6 +151,11 @@ class VoteCounter(telepot.helper.ChatHandler):
         self.storage.add(user)
         self.sender.sendMessage("{0} will play, there are {1} already"
                                 .format(self.name(user), self.format_players_count()))
+
+    def remove_shame(self, user):
+        self.storage.remove_shame(user)
+        self.sender.sendMessage("{0} is not to shame"
+                                .format(self.name(user)))
 
     def remove_user(self, user):
         self.storage.remove(user)
